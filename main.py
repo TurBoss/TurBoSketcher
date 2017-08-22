@@ -46,6 +46,8 @@ class TurBoSketcherWindow(Gtk.Window):
         Gtk.Window.__init__(self)
         self.app = app
 
+        self.set_title("TurboSketcher")
+
         self.builder = Gtk.Builder()
         self.builder.add_from_file("resources/ui.glade")
         self.builder.connect_signals(TurBoSketcherHandler(self))
@@ -83,12 +85,18 @@ class TurBoSketcherHandler:
         self.window.connect('delete-event', Gtk.main_quit)
 
     def on_menu_open_activate(self, *args, **kwargs):
+
+        filter_svg = Gtk.FileFilter()
+        filter_svg.set_name('Sketch')
+        filter_svg.add_mime_type('image/svg+xml')
+
         fc = Gtk.FileChooserDialog(parent=self.window)
 
-        fc.set_title("FileChooserDialog")
+        fc.set_title("Load Sketch")
         fc.add_button("_Open", Gtk.ResponseType.OK)
         fc.add_button("_Cancel", Gtk.ResponseType.CANCEL)
         fc.set_default_response(Gtk.ResponseType.OK)
+        fc.set_filter(filter_svg)
 
         filename = fc.run()
 
