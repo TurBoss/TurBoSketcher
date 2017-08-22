@@ -49,11 +49,12 @@ class TurBoSketcher:
         self.svg_pixbuf = self.svg.get_pixbuf
         self.window.set_svg(self.svg_pixbuf)
 
-    def text_changed(self, entry):
-        entry_id = entry.get_name()
-        entry_buffer = entry.get_buffer()
-        entry_text = entry_buffer.get_text()
-        self.svg.set_field(entry_id, entry_text)
+    def update_sketch(self, element_id, element_text):
+
+        if isinstance(self.window.app.svg, SvgSketch):
+            self.svg.set_field(element_id, element_text)
+            self.svg.update_svg(self.svg_fields)
+            self.refresh_sketcher()
 
     @staticmethod
     def run():
@@ -89,7 +90,7 @@ class TurBoSketcherWindow(Gtk.Window):
         entry = Gtk.Entry()
         entry.set_text(data["text"])
         entry.set_name(id)
-        entry.connect("changed", self.app.text_changed)
+        entry.connect("activate", self.on_activate)
         entry.show_all()
 
         separator = Gtk.Separator()
@@ -98,6 +99,12 @@ class TurBoSketcherWindow(Gtk.Window):
         self.field_box.pack_start(label, True, True, 0)
         self.field_box.pack_start(entry, True, True, 0)
         self.field_box.pack_start(separator, True, True, 0)
+
+    def on_activate(self, entry):
+        entry_id = entry.get_name()
+        entry_text = entry.get_buffer().get_text()
+
+        self.app.update_sketch(entry_id, entry_text)
 
 
 class TurBoSketcherHandler:
@@ -127,11 +134,6 @@ class TurBoSketcherHandler:
             self.window.app.load_data(svg_filename)
 
         fc.destroy()
-
-    def on_redraw_button_clicked(self, *args, **kwargs):
-        if isinstance(self.window.app.svg, SvgSketch):
-            self.window.app.svg.update_svg(self.window.app.svg_fields)
-            self.window.app.refresh_sketcher()
 
 
 class SvgSketch:
