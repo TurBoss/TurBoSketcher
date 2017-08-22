@@ -1,7 +1,5 @@
 #!/usr/bin/python3
 
-import copy
-
 import gi
 
 gi.require_version("Gtk", "3.0")
