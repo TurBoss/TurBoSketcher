@@ -46,7 +46,9 @@ class TurBoSketcher:
 
         self.svg = SvgSketch(self.svg_filename)
 
+        self.svg_fields = self.svg.get_fields
         self.svg_pixbuf = self.svg.get_pixbuf
+        
         self.window.set_svg(self.svg_pixbuf)
 
     def update_sketch(self, element_id, element_text):
