@@ -54,13 +54,7 @@ class TurBoSketcherWindow(Gtk.Window):
 
         self.box = self.builder.get_object("box")
         self.sketch = self.builder.get_object("sketch")
-
-        self.scroll_field_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-
-        self.scroll_field_view = self.builder.get_object("scroll_box")
-        self.scroll_field_view.add(self.scroll_field_box)
-
-        self.scroll_field_box.show_all()
+        self.field_box = self.builder.get_object("field_box")
 
         self.add(self.box)
 
@@ -70,12 +64,18 @@ class TurBoSketcherWindow(Gtk.Window):
     def create_entry(self, field):
         label = Gtk.Label()
         label.set_text(field["label"])
+        label.show_all()
 
         entry = Gtk.Entry()
         entry.set_text(field["text"])
+        entry.show_all()
 
-        self.scroll_field_box.pack_start(label, True, True, 0)
-        self.scroll_field_box.pack_start(entry, True, True, 0)
+        separator = Gtk.Separator()
+        separator.show_all()
+
+        self.field_box.pack_start(label, True, True, 0)
+        self.field_box.pack_start(entry, True, True, 0)
+        self.field_box.pack_start(separator, True, True, 0)
 
 
 class TurBoSketcherHandler:
