@@ -31,8 +31,8 @@ class TurBoSketcher:
         self.svg_pixbuf = self.svg.get_pixbuf
         self.svg_fields = self.svg.get_fields
 
-        for field in self.svg_fields:
-            self.window.create_entry(field)
+        for id, data in self.svg_fields.items():
+            self.window.create_entry(id, data)
 
         self.window.set_svg(self.svg_pixbuf)
 
@@ -61,14 +61,14 @@ class TurBoSketcherWindow(Gtk.Window):
     def set_svg(self, svg):
         self.sketch.set_from_pixbuf(svg)
 
-    def create_entry(self, field):
+    def create_entry(self, id, data):
         label = Gtk.Label()
-        label.set_text(field["label"])
+        label.set_text(data["label"])
         label.show_all()
 
         entry = Gtk.Entry()
-        entry.set_text(field["text"])
-        entry.set_name(field["id"])
+        entry.set_text(data["text"])
+        entry.set_name(id)
         entry.show_all()
 
         separator = Gtk.Separator()
@@ -113,7 +113,7 @@ class SvgSketch:
         self.svg = None
         self.svg_xml = None
 
-        self.fields = list()
+        self.fields = dict()
 
         self.load(svg_filename)
         self.get_elements()
@@ -134,7 +134,6 @@ class SvgSketch:
                 field_id = child.attrib["id"]
                 field_label = child.attrib["{http://www.inkscape.org/namespaces/inkscape}label"]
 
-                field["id"] = field_id
                 field["label"] = field_label
 
                 for tspan in child.iterdescendants():
@@ -145,8 +144,7 @@ class SvgSketch:
 
                             field["text"] = field_text
 
-                            self.fields.append(field)
-        print(self.fields)
+                self.fields[field_id] = field
 
     @property
     def get_pixbuf(self):
@@ -155,6 +153,9 @@ class SvgSketch:
     @property
     def get_fields(self):
         return self.fields
+
+    def set_field(self, id):
+        pass
 
 
 def main():
