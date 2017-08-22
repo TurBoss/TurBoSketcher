@@ -37,8 +37,7 @@ class TurBoSketcher:
         self.svg_pixbuf = self.svg.get_pixbuf
         self.svg_fields = self.svg.get_fields
 
-        for id, data in self.svg_fields.items():
-            self.window.create_entry(id, data)
+        self.window.create_entry(self.svg_fields)
 
         self.window.set_svg(self.svg_pixbuf)
 
@@ -48,7 +47,7 @@ class TurBoSketcher:
 
         self.svg_fields = self.svg.get_fields
         self.svg_pixbuf = self.svg.get_pixbuf
-        
+
         self.window.set_svg(self.svg_pixbuf)
 
     def update_sketch(self, element_id, element_text):
@@ -84,23 +83,24 @@ class TurBoSketcherWindow(Gtk.Window):
         self.sketch.clear()
         self.sketch.set_from_pixbuf(svg)
 
-    def create_entry(self, id, data):
-        label = Gtk.Label()
-        label.set_text(data["label"])
-        label.show_all()
+    def create_entry(self, svg_fields):
+        for id, data in svg_fields.items():
+            label = Gtk.Label()
+            label.set_text(data["label"])
+            label.show_all()
 
-        entry = Gtk.Entry()
-        entry.set_text(data["text"])
-        entry.set_name(id)
-        entry.connect("activate", self.on_activate)
-        entry.show_all()
+            entry = Gtk.Entry()
+            entry.set_text(data["text"])
+            entry.set_name(id)
+            entry.connect("activate", self.on_activate)
+            entry.show_all()
 
-        separator = Gtk.Separator()
-        separator.show_all()
+            separator = Gtk.Separator()
+            separator.show_all()
 
-        self.field_box.pack_start(label, True, True, 0)
-        self.field_box.pack_start(entry, True, True, 0)
-        self.field_box.pack_start(separator, True, True, 0)
+            self.field_box.pack_start(label, True, True, 0)
+            self.field_box.pack_start(entry, True, True, 0)
+            self.field_box.pack_start(separator, True, True, 0)
 
     def on_activate(self, entry):
         entry_id = entry.get_name()
