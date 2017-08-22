@@ -68,6 +68,7 @@ class TurBoSketcherWindow(Gtk.Window):
 
         entry = Gtk.Entry()
         entry.set_text(field["text"])
+        entry.set_name(field["id"])
         entry.show_all()
 
         separator = Gtk.Separator()
