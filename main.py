@@ -118,27 +118,27 @@ class SvgSketch:
 
     def get_elements(self):
 
-        field_id = None
-        field_label = None
-        field_text = None
-
-        field = dict()
-
         for child in self.svg_xml.iterdescendants():
+
+            field = dict()
+
             if child.tag == "{http://www.w3.org/2000/svg}text":
                 field_id = child.attrib["id"]
                 field_label = child.attrib["{http://www.inkscape.org/namespaces/inkscape}label"]
 
-            if child.tag in ("{http://www.w3.org/2000/svg}text",
-                             "{http://www.w3.org/2000/svg}tspan") and child.text and child.text.strip():
-
-                field_text = child.text
-
                 field["id"] = field_id
                 field["label"] = field_label
-                field["text"] = field_text
 
-                self.fields.append(field)
+                for tspan in child.iterdescendants():
+                    for tspan_entry in tspan.iterdescendants():
+                        if tspan_entry.tag == "{http://www.w3.org/2000/svg}tspan":
+
+                            field_text = tspan_entry.text
+
+                            field["text"] = field_text
+
+                            self.fields.append(field)
+        print(self.fields)
 
     @property
     def get_pixbuf(self):
