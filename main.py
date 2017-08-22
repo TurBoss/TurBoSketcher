@@ -129,7 +129,6 @@ class TurBoSketcherHandler:
         fc.destroy()
 
     def on_redraw_button_clicked(self, *args, **kwargs):
-
         if isinstance(self.window.app.svg, SvgSketch):
             self.window.app.svg.update_svg(self.window.app.svg_fields)
             self.window.app.refresh_sketcher()
@@ -169,15 +168,11 @@ class SvgSketch:
             if child.tag == "{http://www.w3.org/2000/svg}text":
                 field_id = child.attrib["id"]
                 field_label = child.attrib["{http://www.inkscape.org/namespaces/inkscape}label"]
-
                 field["label"] = field_label
-
                 for tspan in child.iterdescendants():
                     for tspan_entry in tspan.iterdescendants():
                         if tspan_entry.tag == "{http://www.w3.org/2000/svg}tspan":
-
                             field_text = tspan_entry.text
-
                             field["text"] = field_text
 
                 self.fields[field_id] = field
@@ -190,25 +185,20 @@ class SvgSketch:
     def get_fields(self):
         return self.fields
 
-    def set_field(self, id, text):
-        self.fields[id]['text'] = text
+    def set_field(self, element_id, text):
+        self.fields[element_id]['text'] = text
 
     def update_svg(self, fields):
-
         for k, v in fields.items():
-            print("searching for {}".format(k))
-
             for child in self.svg_xml:
                 if child.tag == "{http://www.w3.org/2000/svg}g":
                     for text_element in child:
                         if text_element.tag == "{http://www.w3.org/2000/svg}text":
                             if text_element.attrib["id"] == k:
-                                print("found {}".format(k))
                                 for tspan in text_element.iterdescendants():
                                     for tspan_entry in tspan.iterdescendants():
                                         if tspan_entry.tag == "{http://www.w3.org/2000/svg}tspan":
                                             tspan_entry.text = v["text"]
-
 
         self.save(self.svg_filename)
 
