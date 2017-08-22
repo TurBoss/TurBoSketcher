@@ -24,8 +24,14 @@ class TurBoSketcher:
         self.window.show_all()
 
         self.svg = None
+        self.svg_pixbuf = None
+        self.svg_fields = None
+        self.svg_filename = None
 
     def load_data(self, svg_file):
+
+        self.svg_filename = svg_file
+
         self.svg = SvgSketch(svg_file)
 
         self.svg_pixbuf = self.svg.get_pixbuf
@@ -35,6 +41,19 @@ class TurBoSketcher:
             self.window.create_entry(id, data)
 
         self.window.set_svg(self.svg_pixbuf)
+
+    def refresh_sketcher(self):
+
+        self.svg = SvgSketch(self.svg_filename)
+
+        self.svg_pixbuf = self.svg.get_pixbuf
+        self.window.set_svg(self.svg_pixbuf)
+
+    def text_changed(self, entry):
+        entry_id = entry.get_name()
+        entry_buffer = entry.get_buffer()
+        entry_text = entry_buffer.get_text()
+        self.svg.set_field(entry_id, entry_text)
 
     @staticmethod
     def run():
@@ -59,6 +78,7 @@ class TurBoSketcherWindow(Gtk.Window):
         self.add(self.box)
 
     def set_svg(self, svg):
+        self.sketch.clear()
         self.sketch.set_from_pixbuf(svg)
 
     def create_entry(self, id, data):
@@ -69,6 +89,7 @@ class TurBoSketcherWindow(Gtk.Window):
         entry = Gtk.Entry()
         entry.set_text(data["text"])
         entry.set_name(id)
+        entry.connect("changed", self.app.text_changed)
         entry.show_all()
 
         separator = Gtk.Separator()
@@ -107,9 +128,16 @@ class TurBoSketcherHandler:
 
         fc.destroy()
 
+    def on_redraw_button_clicked(self, *args, **kwargs):
+
+        if isinstance(self.window.app.svg, SvgSketch):
+            self.window.app.svg.update_svg(self.window.app.svg_fields)
+            self.window.app.refresh_sketcher()
+
 
 class SvgSketch:
     def __init__(self, svg_filename):
+        self.svg_filename = None
         self.svg = None
         self.svg_xml = None
 
@@ -119,10 +147,18 @@ class SvgSketch:
         self.get_elements()
 
     def load(self, svg_filename):
-        with open(svg_filename) as svg_file:
+        self.svg_filename = svg_filename
+
+        with open(self.svg_filename) as svg_file:
             svg_data = svg_file.read().encode("utf-8")
             self.svg = Rsvg.Handle.new_from_data(svg_data)
             self.svg_xml = etree.fromstring(svg_data)
+
+    def save(self, svg_filename):
+
+        with open(svg_filename, "wb") as svg_file:
+            data = etree.tostring(self.svg_xml)
+            svg_file.write(data)
 
     def get_elements(self):
 
@@ -154,8 +190,27 @@ class SvgSketch:
     def get_fields(self):
         return self.fields
 
-    def set_field(self, id):
-        pass
+    def set_field(self, id, text):
+        self.fields[id]['text'] = text
+
+    def update_svg(self, fields):
+
+        for k, v in fields.items():
+            print("searching for {}".format(k))
+
+            for child in self.svg_xml:
+                if child.tag == "{http://www.w3.org/2000/svg}g":
+                    for text_element in child:
+                        if text_element.tag == "{http://www.w3.org/2000/svg}text":
+                            if text_element.attrib["id"] == k:
+                                print("found {}".format(k))
+                                for tspan in text_element.iterdescendants():
+                                    for tspan_entry in tspan.iterdescendants():
+                                        if tspan_entry.tag == "{http://www.w3.org/2000/svg}tspan":
+                                            tspan_entry.text = v["text"]
+
+
+        self.save(self.svg_filename)
 
 
 def main():
