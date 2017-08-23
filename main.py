@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import cairo
+
 # import cairosvg
 import gi
 
@@ -58,10 +58,12 @@ class TurBoSketcher:
             self.svg.update_svg(self.svg_fields)
             self.refresh_sketcher()
 
-    def draw_page(self, operation=None, context=None, page_nr=None):
+    def on_print_operation__begin_print(self, operation, context):
+        operation.set_n_pages(1)
+
+    def on_print_operation_draw_page(self, operation, context, page_nr):
         cr = context.get_cairo_context()
         self.svg.svg.render_cairo(cr)
-        cr.stroke()
 
         return
 
@@ -220,12 +222,30 @@ class TurBoSketcherHandler:
             dialog.destroy()
 
     def on_menu_print_activate(self, *args, **kwargs):
+
+        ps = Gtk.PaperSize.new(Gtk.PaperSize.get_default())
+        st = Gtk.PrintSettings()
+
+        st.set_scale(75.0)
+
+        s = Gtk.PageSetup()
+        s.set_paper_size(ps)
+        """
+        s.set_bottom_margin(4.3, Gtk.Unit.MM)
+        s.set_left_margin(4.3, Gtk.Unit.MM)
+        s.set_right_margin(4.3, Gtk.Unit.MM)
+        s.set_top_margin(4.3, Gtk.Unit.MM)
+        """
+        s.set_orientation(Gtk.PageOrientation.PORTRAIT)
+
         pd = Gtk.PrintOperation()
         pd.set_n_pages(1)
-        pd.set_job_name("Plano")
-        pd.set_unit(Gtk.Unit.MM)
-        pd.connect("draw_page", self.window.app.draw_page)
-        result = pd.run(Gtk.PrintOperationAction.PRINT_DIALOG, None)
+        pd.set_default_page_setup(s)
+        pd.set_print_settings(st)
+        pd.connect('begin-print', self.window.app.on_print_operation__begin_print)
+        pd.connect("draw_page", self.window.app.on_print_operation_draw_page)
+
+        result = pd.run(Gtk.PrintOperationAction.PRINT_DIALOG, self.window)
         # print(result)  # handle errors etc.
 
 
