@@ -169,26 +169,40 @@ class TurBoSketcherHandler:
         fc.destroy()
 
     def on_menu_pdf_activate(self, *args, **kwargs):
-        filter_svg = Gtk.FileFilter()
-        filter_svg.set_name('Sketch')
-        filter_svg.add_mime_type('application/pdf')
 
-        fc = Gtk.FileChooserDialog("Save Sketch as PDF", self.window, Gtk.FileChooserAction.SAVE)
+        if isinstance(self.window.app.svg, SvgSketch):
 
-        fc.add_button("_Save", Gtk.ResponseType.OK)
-        fc.add_button("_Cancel", Gtk.ResponseType.CANCEL)
-        fc.set_default_response(Gtk.ResponseType.OK)
-        fc.set_filter(filter_svg)
+            filter_svg = Gtk.FileFilter()
+            filter_svg.set_name('Sketch')
+            filter_svg.add_mime_type('application/pdf')
 
-        filename = fc.run()
+            fc = Gtk.FileChooserDialog("Save Sketch as PDF", self.window, Gtk.FileChooserAction.SAVE)
 
-        if filename == Gtk.ResponseType.OK:
-            svg_filename = fc.get_filename()
+            fc.add_button("_Save", Gtk.ResponseType.OK)
+            fc.add_button("_Cancel", Gtk.ResponseType.CANCEL)
+            fc.set_default_response(Gtk.ResponseType.OK)
+            fc.set_filter(filter_svg)
 
-            svg_data = self.window.app.svg.get_data
-            cairosvg.svg2pdf(bytestring=svg_data, write_to=svg_filename)
+            filename = fc.run()
 
-        fc.destroy()
+            if filename == Gtk.ResponseType.OK:
+                svg_filename = fc.get_filename()
+
+                svg_data = self.window.app.svg.get_data
+                cairosvg.svg2pdf(bytestring=svg_data, write_to=svg_filename)
+
+            fc.destroy()
+        else:
+            dialog = Gtk.MessageDialog(self.window,
+                                       0,
+                                       Gtk.MessageType.INFO,
+                                       Gtk.ButtonsType.OK,
+                                       "No hay un fichero abierto"
+                                       )
+
+            dialog.format_secondary_text("Abra un fichero para poder exportarlo")
+            dialog.run()
+            dialog.destroy()
 
 
 class SvgSketch:
