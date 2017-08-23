@@ -41,7 +41,7 @@ Optional build windows binaries
 requires cx_freeze
 
 ```
-python windows_build.py build
+python3 windows_build.py build
 ```
 
 ## License
