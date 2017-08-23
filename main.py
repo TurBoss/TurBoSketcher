@@ -248,6 +248,9 @@ class TurBoSketcherHandler:
         result = pd.run(Gtk.PrintOperationAction.PRINT_DIALOG, self.window)
         # print(result)  # handle errors etc.
 
+    def on_menu_quit_activate(self, *args, **kwargs):
+        Gtk.main_quit(args)
+
 
 class SvgSketch:
     def __init__(self, svg_filename):
