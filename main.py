@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+import cairo
+# import cairosvg
 import gi
 
 gi.require_version("Gtk", "3.0")
@@ -8,8 +10,8 @@ gi.require_version("Rsvg", "2.0")
 from gi.repository import Gtk
 from gi.repository import Rsvg
 
+
 from lxml import etree
-import cairosvg
 
 NS = {
     'svg': 'http://www.w3.org/2000/svg',
@@ -50,12 +52,18 @@ class TurBoSketcher:
         self.window.set_svg(self.svg_pixbuf)
 
     def update_sketch(self, element_id, element_text):
-        print("UPDATE")
 
         if isinstance(self.window.app.svg, SvgSketch):
             self.svg.set_field(element_id, element_text)
             self.svg.update_svg(self.svg_fields)
             self.refresh_sketcher()
+
+    def draw_page(self, operation=None, context=None, page_nr=None):
+        cr = context.get_cairo_context()
+        self.svg.svg.render_cairo(cr)
+        cr.stroke()
+
+        return
 
     @staticmethod
     def run():
@@ -108,6 +116,10 @@ class TurBoSketcherWindow(Gtk.Window):
 
         self.app.update_sketch(entry_id, entry_text)
 
+    @property
+    def get_sketch_pixbuf(self):
+        return self.sketch.get_pixbuf()
+
 
 class TurBoSketcherHandler:
     def __init__(self, window):
@@ -145,7 +157,10 @@ class TurBoSketcherHandler:
             fc.destroy()
 
     def on_menu_save_activate(self, *args, **kwargs):
-        self.window.app.svg.save()
+        if isinstance(self.window.app.svg, SvgSketch):
+            self.window.app.svg.save()
+        else:
+            print("cant save nothing")
 
     def on_menu_save_as_activate(self, *args, **kwargs):
         filter_svg = Gtk.FileFilter()
@@ -204,6 +219,15 @@ class TurBoSketcherHandler:
             dialog.run()
             dialog.destroy()
 
+    def on_menu_print_activate(self, *args, **kwargs):
+        pd = Gtk.PrintOperation()
+        pd.set_n_pages(1)
+        pd.set_job_name("Plano")
+        pd.set_unit(Gtk.Unit.MM)
+        pd.connect("draw_page", self.window.app.draw_page)
+        result = pd.run(Gtk.PrintOperationAction.PRINT_DIALOG, None)
+        # print(result)  # handle errors etc.
+
 
 class SvgSketch:
     def __init__(self, svg_filename):
@@ -228,6 +252,9 @@ class SvgSketch:
             self.svg_xml = etree.fromstring(self.svg_data)
 
     def save(self, svg_filename):
+
+        # self.svg.write()
+
         with open(svg_filename, "wb") as svg_file:
             data = etree.tostring(self.svg_xml)
             svg_file.write(data)
