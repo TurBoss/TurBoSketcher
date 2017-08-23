@@ -160,7 +160,7 @@ class TurBoSketcherHandler:
 
     def on_menu_save_activate(self, *args, **kwargs):
         if isinstance(self.window.app.svg, SvgSketch):
-            self.window.app.svg.save()
+            self.window.app.svg.save(self.window.app.svg.svg_filename)
         else:
             print("cant save nothing")
 
