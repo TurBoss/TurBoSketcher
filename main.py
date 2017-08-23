@@ -29,7 +29,6 @@ class TurBoSketcher:
         self.svg_filename = None
 
     def load_data(self, svg_file):
-
         self.svg_filename = svg_file
 
         self.svg = SvgSketch(svg_file)
@@ -42,7 +41,6 @@ class TurBoSketcher:
         self.window.set_svg(self.svg_pixbuf)
 
     def refresh_sketcher(self):
-
         self.svg = SvgSketch(self.svg_filename)
 
         self.svg_fields = self.svg.get_fields
@@ -93,7 +91,7 @@ class TurBoSketcherWindow(Gtk.Window):
             entry = Gtk.Entry()
             entry.set_text(data["text"])
             entry.set_name(id)
-            entry.connect("activate", self.on_activate)
+            entry.connect("activate", self.on_entry_activate)
             entry.show_all()
 
             separator = Gtk.Separator()
@@ -103,7 +101,7 @@ class TurBoSketcherWindow(Gtk.Window):
             self.field_box.pack_start(entry, True, True, 0)
             self.field_box.pack_start(separator, True, True, 0)
 
-    def on_activate(self, entry):
+    def on_entry_activate(self, entry):
         entry_id = entry.get_name()
         entry_text = entry.get_buffer().get_text()
 
@@ -117,14 +115,45 @@ class TurBoSketcherHandler:
 
     def on_menu_open_activate(self, *args, **kwargs):
 
+        if isinstance(self.window.app.svg, SvgSketch):
+            dialog = Gtk.MessageDialog(self.window, 0, Gtk.MessageType.INFO,
+                                       Gtk.ButtonsType.OK, "Aun no esta implementado ")
+            dialog.format_secondary_text(
+                "Aun no es posible abrir un documento con un ya abierto.\nCierre la aplicacion y  abra uno nuevo")
+            dialog.run()
+            dialog.destroy()
+        else:
+            filter_svg = Gtk.FileFilter()
+            filter_svg.set_name('Sketch')
+            filter_svg.add_mime_type('image/svg+xml')
+
+            fc = Gtk.FileChooserDialog("Load Sketch", self.window, Gtk.FileChooserAction.OPEN)
+
+            fc.add_button("_Open", Gtk.ResponseType.OK)
+            fc.add_button("_Cancel", Gtk.ResponseType.CANCEL)
+            fc.set_default_response(Gtk.ResponseType.OK)
+            fc.set_filter(filter_svg)
+
+            filename = fc.run()
+
+            if filename == Gtk.ResponseType.OK:
+                svg_filename = fc.get_filename()
+
+                self.window.app.load_data(svg_filename)
+
+            fc.destroy()
+
+    def on_menu_save_activate(self, *args, **kwargs):
+        self.window.app.svg.save()
+
+    def on_menu_save_as_activate(self, *args, **kwargs):
         filter_svg = Gtk.FileFilter()
         filter_svg.set_name('Sketch')
         filter_svg.add_mime_type('image/svg+xml')
 
-        fc = Gtk.FileChooserDialog(parent=self.window)
+        fc = Gtk.FileChooserDialog("Save Sketch as", self.window, Gtk.FileChooserAction.SAVE)
 
-        fc.set_title("Load Sketch")
-        fc.add_button("_Open", Gtk.ResponseType.OK)
+        fc.add_button("_Save", Gtk.ResponseType.OK)
         fc.add_button("_Cancel", Gtk.ResponseType.CANCEL)
         fc.set_default_response(Gtk.ResponseType.OK)
         fc.set_filter(filter_svg)
@@ -134,7 +163,7 @@ class TurBoSketcherHandler:
         if filename == Gtk.ResponseType.OK:
             svg_filename = fc.get_filename()
 
-            self.window.app.load_data(svg_filename)
+            self.window.app.svg.save(svg_filename)
 
         fc.destroy()
 
@@ -159,7 +188,6 @@ class SvgSketch:
             self.svg_xml = etree.fromstring(svg_data)
 
     def save(self, svg_filename):
-
         with open(svg_filename, "wb") as svg_file:
             data = etree.tostring(self.svg_xml)
             svg_file.write(data)
