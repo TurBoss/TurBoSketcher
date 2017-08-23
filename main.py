@@ -51,6 +51,7 @@ class TurBoSketcher:
         self.window.set_svg(self.svg_pixbuf)
 
     def update_sketch(self, element_id, element_text):
+        print("UPDATE")
 
         if isinstance(self.window.app.svg, SvgSketch):
             self.svg.set_field(element_id, element_text)
@@ -167,19 +168,24 @@ class SvgSketch:
 
         for child in self.svg_xml.iterdescendants():
 
-            field = dict()
-
             if child.tag == "{http://www.w3.org/2000/svg}text":
-                field_id = child.attrib["id"]
-                field_label = child.attrib["{http://www.inkscape.org/namespaces/inkscape}label"]
-                field["label"] = field_label
-                for tspan in child.iterdescendants():
-                    for tspan_entry in tspan.iterdescendants():
-                        if tspan_entry.tag == "{http://www.w3.org/2000/svg}tspan":
-                            field_text = tspan_entry.text
-                            field["text"] = field_text
+                field_label = child.attrib.get("{http://www.inkscape.org/namespaces/inkscape}label", False)
+                if field_label:
+                    field = dict()
+                    field_id = child.attrib["id"]
+                    field["label"] = field_label
 
-                self.fields[field_id] = field
+                    for tspan in child.iterdescendants():
+                        if tspan.text is not None:
+                            field_text = tspan.text
+                            field["text"] = field_text
+                        else:
+                            for tspan_entry in tspan.iterdescendants():
+                                if tspan_entry.tag == "{http://www.w3.org/2000/svg}tspan":
+                                    field_text = tspan_entry.text
+                                    field["text"] = field_text
+
+                    self.fields[field_id] = field
 
     @property
     def get_pixbuf(self):
@@ -200,9 +206,12 @@ class SvgSketch:
                         if text_element.tag == "{http://www.w3.org/2000/svg}text":
                             if text_element.attrib["id"] == k:
                                 for tspan in text_element.iterdescendants():
-                                    for tspan_entry in tspan.iterdescendants():
-                                        if tspan_entry.tag == "{http://www.w3.org/2000/svg}tspan":
-                                            tspan_entry.text = v["text"]
+                                    if tspan.text is None:
+                                        for tspan_entry in tspan.iterdescendants():
+                                            if tspan_entry.tag == "{http://www.w3.org/2000/svg}tspan":
+                                                tspan_entry.text = v["text"]
+                                    else:
+                                        tspan.text = v["text"]
 
         self.save(self.svg_filename)
 
