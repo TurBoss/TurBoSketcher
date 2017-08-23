@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 
-# import cairosvg
+import cairosvg
 import gi
 
 gi.require_version("Gtk", "3.0")
