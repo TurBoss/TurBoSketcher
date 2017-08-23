@@ -9,6 +9,7 @@ from gi.repository import Gtk
 from gi.repository import Rsvg
 
 from lxml import etree
+import cairosvg
 
 NS = {
     'svg': 'http://www.w3.org/2000/svg',
@@ -167,12 +168,36 @@ class TurBoSketcherHandler:
 
         fc.destroy()
 
+    def on_menu_pdf_activate(self, *args, **kwargs):
+        filter_svg = Gtk.FileFilter()
+        filter_svg.set_name('Sketch')
+        filter_svg.add_mime_type('application/pdf')
+
+        fc = Gtk.FileChooserDialog("Save Sketch as PDF", self.window, Gtk.FileChooserAction.SAVE)
+
+        fc.add_button("_Save", Gtk.ResponseType.OK)
+        fc.add_button("_Cancel", Gtk.ResponseType.CANCEL)
+        fc.set_default_response(Gtk.ResponseType.OK)
+        fc.set_filter(filter_svg)
+
+        filename = fc.run()
+
+        if filename == Gtk.ResponseType.OK:
+            svg_filename = fc.get_filename()
+
+            svg_data = self.window.app.svg.get_data
+            cairosvg.svg2pdf(bytestring=svg_data, write_to=svg_filename)
+
+        fc.destroy()
+
 
 class SvgSketch:
     def __init__(self, svg_filename):
         self.svg_filename = None
         self.svg = None
+        self.svg_file = None
         self.svg_xml = None
+        self.svg_data = None
 
         self.fields = dict()
 
@@ -183,9 +208,10 @@ class SvgSketch:
         self.svg_filename = svg_filename
 
         with open(self.svg_filename) as svg_file:
-            svg_data = svg_file.read().encode("utf-8")
-            self.svg = Rsvg.Handle.new_from_data(svg_data)
-            self.svg_xml = etree.fromstring(svg_data)
+            self.svg_file = svg_file
+            self.svg_data = svg_file.read().encode("utf-8")
+            self.svg = Rsvg.Handle.new_from_data(self.svg_data)
+            self.svg_xml = etree.fromstring(self.svg_data)
 
     def save(self, svg_filename):
         with open(svg_filename, "wb") as svg_file:
@@ -218,6 +244,10 @@ class SvgSketch:
     @property
     def get_pixbuf(self):
         return self.svg.get_pixbuf()
+
+    @property
+    def get_data(self):
+        return self.svg_data
 
     @property
     def get_fields(self):
