@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 
-import cairosvg
+import cairo
 import gi
 
 gi.require_version("Gtk", "3.0")
@@ -63,7 +63,10 @@ class TurBoSketcher:
 
     def on_print_operation_draw_page(self, operation, context, page_nr):
         cr = context.get_cairo_context()
-        self.svg.svg.render_cairo(cr)
+        svg_data = self.window.app.svg.svg
+
+        svg_data.set_dpi(72)  # why do we have to specify this at all?
+        svg_data.render_cairo(cr)
 
         return
 
@@ -203,10 +206,18 @@ class TurBoSketcherHandler:
             filename = fc.run()
 
             if filename == Gtk.ResponseType.OK:
-                svg_filename = fc.get_filename()
+                pdf_filename = fc.get_filename()
 
-                svg_data = self.window.app.svg.get_data
-                cairosvg.svg2pdf(bytestring=svg_data, write_to=svg_filename)
+                svg_data = self.window.app.svg.svg
+
+                svg_data.set_dpi(72)  # why do we have to specify this at all?
+
+                width_pt, height_pt = 595.27, 841.89
+
+                pdf_surface = cairo.PDFSurface(pdf_filename, width_pt, height_pt)
+                ctx = cairo.Context(pdf_surface)
+                svg_data.render_cairo(ctx)
+                pdf_surface.finish()
 
             fc.destroy()
         else:
@@ -226,7 +237,7 @@ class TurBoSketcherHandler:
         ps = Gtk.PaperSize.new(Gtk.PaperSize.get_default())
         st = Gtk.PrintSettings()
 
-        st.set_scale(75.0)
+        # st.set_scale(75.0)
 
         s = Gtk.PageSetup()
         s.set_paper_size(ps)
@@ -249,12 +260,12 @@ class TurBoSketcherHandler:
         # print(result)  # handle errors etc.
 
     def on_menu_quit_activate(self, *args, **kwargs):
-        Gtk.main_quit(args)
+        Gtk.main_quit(args, kwargs)
 
 
 class SvgSketch:
     def __init__(self, svg_filename):
-        self.svg_filename = None
+        self.svg_filename = svg_filename
         self.svg = None
         self.svg_file = None
         self.svg_xml = None
@@ -266,18 +277,14 @@ class SvgSketch:
         self.get_elements()
 
     def load(self, svg_filename):
-        self.svg_filename = svg_filename
 
-        with open(self.svg_filename) as svg_file:
+        with open(svg_filename) as svg_file:
             self.svg_file = svg_file
             self.svg_data = svg_file.read().encode("utf-8")
             self.svg = Rsvg.Handle.new_from_data(self.svg_data)
             self.svg_xml = etree.fromstring(self.svg_data)
 
     def save(self, svg_filename):
-
-        # self.svg.write()
-
         with open(svg_filename, "wb") as svg_file:
             data = etree.tostring(self.svg_xml)
             svg_file.write(data)
