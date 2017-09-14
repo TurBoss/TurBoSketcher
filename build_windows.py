@@ -55,7 +55,8 @@ if sys.platform == "win32":
 
 executables = [
     Executable("main.py",
-               base=base
+               base=base,
+               icon="icon.ico"
                )
 ]
 
